@@ -1,8 +1,14 @@
 "use strict";
 
-var PageRuler = {
-    screenshot: new Image(),
-    canvas: document.createElement("canvas"),
+var PageRuler;
+
+function sendMessage( lastTabId ) {
+	chrome.runtime.sendMessage({
+		action: "loadtest"
+	});
+}
+
+PageRuler = {
     init: function(type, previousVersion) {
         console.log("init");
         var manifest = chrome.runtime.getManifest();
@@ -33,8 +39,9 @@ var PageRuler = {
     },
     load: function(tabId) {
         console.log("loading content script");
-        chrome.tabs.executeScript(tabId, {
-            file: "content.js"
+        chrome.scripting.executeScript({
+			target: { tabId: tabId },
+            files: [ "content.js" ]
         }, function() {
             console.log("content script for tab #" + tabId + " has loaded");
             PageRuler.enable(tabId);
@@ -45,7 +52,7 @@ var PageRuler = {
             type: "enable"
         }, function(success) {
             console.log("enable message for tab #" + tabId + " was sent");
-            chrome.browserAction.setIcon({
+            chrome.action.setIcon({
                 path: PageRuler.image("browser_action_on.png"),
                 tabId: tabId
             });
@@ -56,7 +63,7 @@ var PageRuler = {
             type: "disable"
         }, function(success) {
             console.log("disable message for tab #" + tabId + " was sent");
-            chrome.browserAction.setIcon({
+            chrome.action.setIcon({
                 path: PageRuler.image("browser_action.png"),
                 tabId: tabId
             });
@@ -64,11 +71,13 @@ var PageRuler = {
     },
     browserAction: function(tab) {
         var tabId = tab.id;
-        var args = "'action': 'loadtest'," + "'loaded': window.hasOwnProperty('__PageRuler')," + "'active': window.hasOwnProperty('__PageRuler') && window.__PageRuler.active";
-        chrome.tabs.executeScript(tabId, {
-            code: "chrome.runtime.sendMessage({ " + args + " });"
-        });
+		chrome.scripting.executeScript({
+			target: { tabId: tabId },
+			func: sendMessage,
+			args: [tabId]
+		});
     },
+
     openUpdateTab: function(type) {
         chrome.storage.sync.get("hide_update_tab", function(items) {
             if (!items.hide_update_tab) {
@@ -82,13 +91,13 @@ var PageRuler = {
         var url = changeInfo.url || tab.url || false;
         if (!!url) {
             if (/^chrome\-extension:\/\//.test(url) || /^chrome:\/\//.test(url)) {
-                chrome.browserAction.setPopup({
+                chrome.action.setPopup({
                     tabId: tabId,
                     popup: "popup.html#local"
                 });
             }
             if (/^https:\/\/chrome\.google\.com\/webstore\//.test(url)) {
-                chrome.browserAction.setPopup({
+                chrome.action.setPopup({
                     tabId: tabId,
                     popup: "popup.html#webstore"
                 });
@@ -105,13 +114,15 @@ var PageRuler = {
     }
 };
 
-chrome.browserAction.onClicked.addListener(PageRuler.browserAction);
+chrome.action.onClicked.addListener(PageRuler.browserAction);
 
 chrome.tabs.onUpdated.addListener(PageRuler.setPopup);
 
 chrome.runtime.onStartup.addListener(function() {
     console.log("onStartup");
     PageRuler.init();
+    PageRuler.screenshot = new Image();
+    PageRuler.canvas = document.createElement("canvas");
 });
 
 chrome.runtime.onInstalled.addListener(function(details) {
@@ -188,6 +199,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         break;
 
       case "loadtest":
+        console.log("Load test:" + message.loaded + ":" + message.active);
         if (!message.loaded) {
             PageRuler.load(tabId);
         } else {
@@ -269,7 +281,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 
       case "openHelp":
         chrome.tabs.create({
-            url: chrome.extension.getURL("update.html") + "#help"
+            url: chrome.runtime.getURL("update.html") + "#help"
         });
         break;
     }
