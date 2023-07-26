@@ -217,7 +217,7 @@ input[id^="page-ruler"][type="checkbox"] {
 #page-ruler-toolbar input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: inner-spin-button !important;
   -moz-appearance: inner-spin-button !important;
-  appearance: inner-spin-button !important; }
+  }
 
 #page-ruler-toolbar input[type="color"] {
   width: 40px !important;
@@ -547,7 +547,7 @@ input[id^="page-ruler"][type="checkbox"] {
   #page-ruler-toolbar input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
-    appearance: none !important; }
+    }
 
   #page-ruler-toolbar .page-ruler-px-container:after {
     content: "" !important; }
