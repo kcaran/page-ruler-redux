@@ -114,15 +114,15 @@ PageRuler = {
     }
 };
 
-chrome.action.onClicked.addListener(PageRuler.browserAction);
+chrome.action.onClicked.addListener( PageRuler.browserAction );
 
 chrome.tabs.onUpdated.addListener(PageRuler.setPopup);
 
 chrome.runtime.onStartup.addListener(function() {
     console.log("onStartup");
     PageRuler.init();
-    PageRuler.screenshot = new Image();
     PageRuler.canvas = document.createElement("canvas");
+    PageRuler.screenshot = new PageRuler.canvas.Image();
 });
 
 chrome.runtime.onInstalled.addListener(function(details) {
@@ -287,8 +287,4 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     }
     console.groupEnd();
     return true;
-});
-
-chrome.commands.onCommand.addListener(function(command) {
-    console.log("Command:", command);
 });
